@@ -94,6 +94,8 @@ contract HomoraBank is Governable, ERC1155NaiveReceiver, IBank {
 
   uint public bankStatus; // Each bit stores certain bank status, e.g. borrow allowed, repay allowed
 
+  address public rewardToken; // ICErc20 pool reward token;
+
   /// @dev Ensure that the function is called from EOA when allowContractCalls is set to false and caller is not whitelisted
   modifier onlyEOAEx() {
     if (!allowContractCalls && !whitelistedUsers[msg.sender]) {
@@ -129,7 +131,7 @@ contract HomoraBank is Governable, ERC1155NaiveReceiver, IBank {
   /// @dev Initialize the bank smart contract, using msg.sender as the first governor.
   /// @param _oracle The oracle smart contract address.
   /// @param _feeBps The fee collected to Homora bank.
-  function initialize(IOracle _oracle, uint _feeBps) external initializer {
+  function initialize(IOracle _oracle, uint _feeBps, address _rewardToken) external initializer {
     __Governable__init();
     _GENERAL_LOCK = _NOT_ENTERED;
     _IN_EXEC_LOCK = _NOT_ENTERED;
@@ -141,6 +143,7 @@ contract HomoraBank is Governable, ERC1155NaiveReceiver, IBank {
     feeBps = _feeBps;
     nextPositionId = 1;
     bankStatus = 3; // allow both borrow and repay
+    rewardToken = _rewardToken;
     emit SetOracle(address(_oracle));
     emit SetFeeBps(_feeBps);
   }
@@ -441,6 +444,15 @@ contract HomoraBank is Governable, ERC1155NaiveReceiver, IBank {
     bank.reserve = bank.reserve.sub(amount);
     IERC20(token).safeTransfer(msg.sender, amount);
     emit WithdrawReserve(msg.sender, token, amount);
+  }
+
+  /// @dev Withdraw the reward of the bank.
+  /// @param amount The amount of tokens to withdraw.
+  function withdrawReward(uint amount) external onlyGov lock {
+    uint balance = IERC20(rewardToken).balanceOf(address(this));
+    if (balance > 0) {
+      IERC20(rewardToken).safeTransfer(msg.sender, amount > balance ? balance : amount);
+    }
   }
 
   /// @dev Liquidate a position. Pay debt for its owner and take the collateral.
