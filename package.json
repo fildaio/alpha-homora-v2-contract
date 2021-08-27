@@ -1,7 +1,7 @@
 {
   "name": "homora-v2",
   "version": "1.0.0",
-  "description": "",
+  "description": "TL;DR. Here's what V2 will support:",
   "main": "index.js",
   "directories": {
     "test": "tests"
@@ -24,6 +24,9 @@
   },
   "homepage": "https://github.com/AlphaFinanceLab/homora-v2#readme",
   "dependencies": {
-    "@uniswap/v2-core": "^1.0.1"
+    "@truffle/hdwallet-provider": "^1.5.0",
+    "@uniswap/v2-core": "^1.0.1",
+    "dotenv": "^10.0.0",
+    "@openzeppelin/contracts": "^3.4.0"
   }
 }

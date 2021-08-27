@@ -2,7 +2,7 @@
 
 pragma solidity 0.6.12;
 
-import 'OpenZeppelin/openzeppelin-contracts@3.4.0/contracts/math/SafeMath.sol';
+import '@openzeppelin/contracts/math/SafeMath.sol';
 
 library HomoraMath {
   using SafeMath for uint;
