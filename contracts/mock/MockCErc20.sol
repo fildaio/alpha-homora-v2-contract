@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity 0.6.12;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
@@ -26,17 +28,8 @@ contract MockCErc20 is ICErc20 {
     return address(token);
   }
 
-  function mint(uint mintAmount) external override returns (uint) {
-    // Not implemented
-    return 0;
-  }
-
-  function redeem(uint redeemTokens) external override returns (uint) {
-    // Not implemented
-    return 0;
-  }
-
   function balanceOf(address user) external view override returns (uint) {
+    user;
     // Not implemented
     return 0;
   }

@@ -7,10 +7,6 @@ interface ICErc20 {
 
   function underlying() external returns (address);
 
-  function mint(uint mintAmount) external returns (uint);
-
-  function redeem(uint redeemTokens) external returns (uint);
-
   function balanceOf(address user) external view returns (uint);
 
   function borrowBalanceCurrent(address account) external returns (uint);
