@@ -436,6 +436,13 @@ contract HomoraBank is Governable, ERC1155NaiveReceiver, IBank {
     emit SetFeeBps(_feeBps);
   }
 
+  /// @dev Set the reward token smart contract address.
+  /// @param _rewardToken The new reward token smart contract address.
+  function setRewardToken(address _rewardToken) external onlyGov {
+    require(address(_rewardToken) != address(0), 'cannot set zero address rewardToken');
+    rewardToken = _rewardToken;
+  }
+
   /// @dev Withdraw the reserve portion of the bank.
   /// @param amount The amount of tokens to withdraw.
   function withdrawReserve(address token, uint amount) external onlyGov lock {
