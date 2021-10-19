@@ -81,6 +81,7 @@ contract CErc20Adaptor is ICErc20 {
             wETH.deposit{value: returnAmount}();
             wETH.transfer(iBank, returnAmount);
         }
+        return 0;
     }
 
     /// @dev Withdraw the reward to the bank.
