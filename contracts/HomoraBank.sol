@@ -242,6 +242,7 @@ contract HomoraBank is Governable, ERC1155NaiveReceiver, IBank {
       // note that if *repayBorrowBehalf* exists, an attacker can maliciously deflate debt
       // share value and potentially make this contract stop working due to math overflow.
       bank.totalDebt = debt;
+      emit DebtErr(debt, totalDebt);
     }
   }
 
@@ -409,6 +410,7 @@ contract HomoraBank is Governable, ERC1155NaiveReceiver, IBank {
     Bank storage bank = banks[token];
     require(!cTokenInBank[cToken], 'cToken already exists');
     require(!bank.isListed, 'bank already exists');
+    require(token != rewardToken, 'bank token cannot be reward token');
     cTokenInBank[cToken] = true;
     bank.isListed = true;
     require(allBanks.length < 256, 'reach bank limit');
@@ -440,7 +442,9 @@ contract HomoraBank is Governable, ERC1155NaiveReceiver, IBank {
   /// @param _rewardToken The new reward token smart contract address.
   function setRewardToken(address _rewardToken) external onlyGov {
     require(address(_rewardToken) != address(0), 'cannot set zero address rewardToken');
+    require(!banks[_rewardToken].isListed, 'rewardToken cannot be existing bank token');
     rewardToken = _rewardToken;
+    emit SetRewardToken(_rewardToken);
   }
 
   /// @dev Withdraw the reserve portion of the bank.
