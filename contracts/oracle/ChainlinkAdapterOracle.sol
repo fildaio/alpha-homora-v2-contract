@@ -50,8 +50,8 @@ contract ChainlinkAdapterOracle is IBaseOracle, Governable {
   event SetMaxDelayTime(address token, uint maxDelayTime);
   event SetRefETHUSD(address ref);
 
-  address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-  address public refETHUSD = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419; // ETH-USD price reference
+  address public constant WETH = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
+  address public refETHUSD = 0xAB594600376Ec9fD91F8e885dADF0CE036862dE0; // ETH-USD price reference
   mapping(address => address) public refsETH; // Mapping from token address to ETH price reference
   mapping(address => address) public refsUSD; // Mapping from token address to USD price reference
   mapping(address => uint) public maxDelayTimes; // Mapping from token address to max delay time
@@ -124,7 +124,7 @@ contract ChainlinkAdapterOracle is IBaseOracle, Governable {
       (, int ethAnswer, , uint ethUpdatedAt, ) =
         IAggregatorV3Interface(refETHUSD).latestRoundData();
       require(ethUpdatedAt >= block.timestamp.sub(maxDelayTime), 'delayed eth-usd update time');
-      return uint(answer).mul(2**112).div(uint(ethAnswer)).div(10**decimals);
+      return uint(answer).mul(2**112).mul(10**(18 - decimals)).div(uint(ethAnswer));
     }
 
     revert('no valid price reference for token');
