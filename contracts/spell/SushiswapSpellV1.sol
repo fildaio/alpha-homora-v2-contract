@@ -161,6 +161,8 @@ contract SushiswapSpellV1 is WhitelistSpell {
     uint balA = IERC20(tokenA).balanceOf(address(this));
     uint balB = IERC20(tokenB).balanceOf(address(this));
     if (balA > 0 || balB > 0) {
+      require(balA >= amt.amtAMin, "desired amount is less than amtAMin");
+      require(balB >= amt.amtBMin, "desired amount is less than amtBMin");
       router.addLiquidity(
         tokenA,
         tokenB,
