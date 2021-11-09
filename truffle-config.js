@@ -52,7 +52,7 @@ module.exports = {
       chain_id: "137",
       timeoutBlocks: 600,
       //confirmations: 2,
-      gasPrice: 10000000000,
+      gasPrice: 50000000000,
       skipDryRun: false,
       networkCheckTimeout: 600000000,
       websockets: true
@@ -100,6 +100,10 @@ module.exports = {
     // timeout: 100000
   },
 
+  plugins: [
+    'truffle-contract-size'
+  ],
+  
   // Configure your compilers
   compilers: {
     solc: {

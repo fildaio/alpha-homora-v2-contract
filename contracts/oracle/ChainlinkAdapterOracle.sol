@@ -49,8 +49,9 @@ contract ChainlinkAdapterOracle is IBaseOracle, Governable {
   event SetRefUSD(address token, address ref);
   event SetMaxDelayTime(address token, uint maxDelayTime);
   event SetRefETHUSD(address ref);
+  event SetWETH(address weth);
 
-  address public constant WETH = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
+  address public WETH = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
   address public refETHUSD = 0xAB594600376Ec9fD91F8e885dADF0CE036862dE0; // ETH-USD price reference
   mapping(address => address) public refsETH; // Mapping from token address to ETH price reference
   mapping(address => address) public refsUSD; // Mapping from token address to USD price reference
@@ -98,6 +99,13 @@ contract ChainlinkAdapterOracle is IBaseOracle, Governable {
   function setRefETHUSD(address _refETHUSD) external onlyGov {
     refETHUSD = _refETHUSD;
     emit SetRefETHUSD(_refETHUSD);
+  }
+
+  /// @dev Set WETH address
+  /// @param _WETH The new WETH address set to
+  function setWETH(address _WETH) external onlyGov {
+    WETH = _WETH;
+    emit SetWETH(_WETH);
   }
 
   /// @dev Return token price in ETH, multiplied by 2**112
