@@ -69,13 +69,25 @@ contract WMiniChefV2 is ERC1155('WMiniChefV2'), ReentrancyGuard, IERC20Wrapper {
 
     chef.deposit(pid, amount, address(this));
 
-    IRewarder rewarder = chef.rewarder(pid);
-    (stRewardPerShare[pid], ,) = rewarder.poolInfo(pid);
-
     (uint128 sushiPerShare, ,) = chef.poolInfo(pid);
     uint id = encodeId(pid, sushiPerShare);
+
+    IRewarder rewarder = chef.rewarder(pid);
+    (stRewardPerShare[id], ,) = rewarder.poolInfo(pid);
+
     _mint(msg.sender, id, amount, '');
     return id;
+  }
+
+  struct BurnLocalParam {
+    uint pid;
+    uint stSushiPerShare;
+    uint128 enSushiPerShare;
+    uint stSushi;
+    uint enSushi;
+    uint128 enRewardPerShare;
+    uint stReward;
+    uint enReward;
   }
 
   /// @dev Burn ERC1155 token to redeem LP ERC20 token back plus SUSHI rewards.
@@ -86,27 +98,30 @@ contract WMiniChefV2 is ERC1155('WMiniChefV2'), ReentrancyGuard, IERC20Wrapper {
     if (amount == uint(-1)) {
       amount = balanceOf(msg.sender, id);
     }
-    (uint pid, uint stSushiPerShare) = decodeId(id);
+
+    BurnLocalParam memory param;
+
+    (param.pid, param.stSushiPerShare) = decodeId(id);
     _burn(msg.sender, id, amount);
-    chef.withdrawAndHarvest(pid, amount, address(this));
-    address lpToken = chef.lpToken(pid);
-    (uint128 enSushiPerShare, ,) = chef.poolInfo(pid);
+    chef.withdrawAndHarvest(param.pid, amount, address(this));
+    address lpToken = chef.lpToken(param.pid);
+    (param.enSushiPerShare, ,) = chef.poolInfo(param.pid);
     IERC20(lpToken).safeTransfer(msg.sender, amount);
-    uint stSushi = stSushiPerShare.mul(amount).divCeil(1e12);
-    uint enSushi = uint(enSushiPerShare).mul(amount).div(1e12);
-    if (enSushi > stSushi) {
-      sushi.safeTransfer(msg.sender, enSushi.sub(stSushi));
+    param.stSushi = param.stSushiPerShare.mul(amount).divCeil(1e12);
+    param.enSushi = uint(param.enSushiPerShare).mul(amount).div(1e12);
+    if (param.enSushi > param.stSushi) {
+      sushi.safeTransfer(msg.sender, param.enSushi.sub(param.stSushi));
     }
 
-    IRewarder rewarder = chef.rewarder(pid);
-    (uint128 enRewardPerShare, ,) = rewarder.poolInfo(pid);
-    (IERC20[] memory rewardTokens, ) = rewarder.pendingTokens(pid, address(this), 0);
-    uint stReward = stRewardPerShare[pid].mul(amount).divCeil(1e12);
-    uint enReward = uint(enRewardPerShare).mul(amount).div(1e12);
-    if (enReward > stReward) {
-      rewardTokens[0].safeTransfer(msg.sender, enReward.sub(stReward));
+    IRewarder rewarder = chef.rewarder(param.pid);
+    (param.enRewardPerShare, ,) = rewarder.poolInfo(param.pid);
+    (IERC20[] memory rewardTokens, ) = rewarder.pendingTokens(param.pid, address(this), 0);
+    param.stReward = stRewardPerShare[id].mul(amount).divCeil(1e12);
+    param.enReward = uint(param.enRewardPerShare).mul(amount).div(1e12);
+    if (param.enReward > param.stReward) {
+      rewardTokens[0].safeTransfer(msg.sender, param.enReward.sub(param.stReward));
     }
-    return pid;
+    return param.pid;
   }
 
   function rewardToken(uint id) external view returns (address) {

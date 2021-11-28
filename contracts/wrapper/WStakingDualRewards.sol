@@ -20,7 +20,7 @@ contract WStakingDualRewards is ERC1155('WStakingDualRewards'), ReentrancyGuard,
   address public immutable rewardA; // Reward token address
   address public immutable rewardB; // Reward token address
 
-  uint stRewardPerTokenB;
+  mapping(uint => uint) public stRewardPerTokenB;
 
   constructor(
     address _staking,
@@ -51,7 +51,7 @@ contract WStakingDualRewards is ERC1155('WStakingDualRewards'), ReentrancyGuard,
     IERC20(underlying).safeTransferFrom(msg.sender, address(this), amount);
     IStakingDualRewards(staking).stake(amount);
     uint rewardPerToken = IStakingDualRewards(staking).rewardPerTokenA();
-    stRewardPerTokenB = IStakingDualRewards(staking).rewardPerTokenB();
+    stRewardPerTokenB[rewardPerToken] = IStakingDualRewards(staking).rewardPerTokenB();
     _mint(msg.sender, rewardPerToken, amount, '');
     return rewardPerToken;
   }
@@ -76,7 +76,7 @@ contract WStakingDualRewards is ERC1155('WStakingDualRewards'), ReentrancyGuard,
     }
 
     uint enRewardPerTokenB = IStakingDualRewards(staking).rewardPerTokenB();
-    uint stRewardB = stRewardPerTokenB.mul(amount).divCeil(1e18);
+    uint stRewardB = stRewardPerTokenB[id].mul(amount).divCeil(1e18);
     uint enRewardB = enRewardPerTokenB.mul(amount).div(1e18);
     if (enRewardB > stRewardB) {
       IERC20(rewardB).safeTransfer(msg.sender, enRewardB.sub(stRewardB));
