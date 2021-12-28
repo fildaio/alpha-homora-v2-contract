@@ -73,7 +73,9 @@ contract WMiniChefV2 is ERC1155('WMiniChefV2'), ReentrancyGuard, IERC20Wrapper {
     uint id = encodeId(pid, sushiPerShare);
 
     IRewarder rewarder = chef.rewarder(pid);
-    (stRewardPerShare[id], ,) = rewarder.poolInfo(pid);
+    if (address(rewarder) != address(0)) {
+      (stRewardPerShare[id], ,) = rewarder.poolInfo(pid);
+    }
 
     _mint(msg.sender, id, amount, '');
     return id;
@@ -114,12 +116,14 @@ contract WMiniChefV2 is ERC1155('WMiniChefV2'), ReentrancyGuard, IERC20Wrapper {
     }
 
     IRewarder rewarder = chef.rewarder(param.pid);
-    (param.enRewardPerShare, ,) = rewarder.poolInfo(param.pid);
-    (IERC20[] memory rewardTokens, ) = rewarder.pendingTokens(param.pid, address(this), 0);
-    param.stReward = stRewardPerShare[id].mul(amount).divCeil(1e12);
-    param.enReward = uint(param.enRewardPerShare).mul(amount).div(1e12);
-    if (param.enReward > param.stReward) {
-      rewardTokens[0].safeTransfer(msg.sender, param.enReward.sub(param.stReward));
+    if (address(rewarder) != address(0)) {
+      (param.enRewardPerShare, ,) = rewarder.poolInfo(param.pid);
+      (IERC20[] memory rewardTokens, ) = rewarder.pendingTokens(param.pid, address(this), 0);
+      param.stReward = stRewardPerShare[id].mul(amount).divCeil(1e12);
+      param.enReward = uint(param.enRewardPerShare).mul(amount).div(1e12);
+      if (param.enReward > param.stReward) {
+        rewardTokens[0].safeTransfer(msg.sender, param.enReward.sub(param.stReward));
+      }
     }
     return param.pid;
   }
@@ -127,6 +131,8 @@ contract WMiniChefV2 is ERC1155('WMiniChefV2'), ReentrancyGuard, IERC20Wrapper {
   function rewardToken(uint id) external view returns (address) {
     (uint pid, ) = decodeId(id);
     IRewarder rewarder = chef.rewarder(pid);
+    if (address(rewarder) == address(0)) return address(0);
+
     (IERC20[] memory rewardTokens, ) = rewarder.pendingTokens(pid, address(this), 0);
     return address(rewardTokens[0]);
   }

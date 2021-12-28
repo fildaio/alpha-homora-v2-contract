@@ -13,7 +13,7 @@ import '../../interfaces/IUniswapV2Router02.sol';
 import '../../interfaces/IUniswapV2Pair.sol';
 import '../../interfaces/IWMiniChefV2.sol';
 
-contract SushiswapDualSpellV1 is WhitelistSpell {
+contract SushiswapSpellV2 is WhitelistSpell {
   using SafeMath for uint;
   using HomoraMath for uint;
 
@@ -232,6 +232,8 @@ contract SushiswapDualSpellV1 is WhitelistSpell {
     uint id = wminichef.mint(pid, amount);
     bank.putCollateral(address(wminichef), id, amount);
 
+    address rewardToken = wminichef.rewardToken(collId);
+
     // 8. Refund leftovers to users
     doRefundETH();
     doRefund(tokenA);
@@ -239,6 +241,9 @@ contract SushiswapDualSpellV1 is WhitelistSpell {
 
     // 9. Refund sushi
     doRefund(sushi);
+    if (rewardToken != address(0)) {
+      doRefund(rewardToken);
+    }
   }
 
   struct RepayAmounts {
@@ -383,7 +388,9 @@ contract SushiswapDualSpellV1 is WhitelistSpell {
 
     // 9. Refund sushi
     doRefund(sushi);
-    doRefund(rewardToken);
+    if (rewardToken != address(0)) {
+      doRefund(rewardToken);
+    }
   }
 
   /// @dev Harvest SUSHI reward tokens to in-exec position's owner
@@ -408,6 +415,8 @@ contract SushiswapDualSpellV1 is WhitelistSpell {
 
     // 3. Refund sushi
     doRefund(sushi);
-    doRefund(rewardToken);
+    if (rewardToken != address(0)) {
+      doRefund(rewardToken);
+    }
   }
 }
