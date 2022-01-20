@@ -73,14 +73,7 @@ contract CErc20Adaptor is ICErc20 {
 
         IERC20(address(wETH)).safeTransferFrom(msg.sender, address(this), repayAmount);
         wETH.withdraw(repayAmount);
-        uint256 balanceBeforeRepay = address(this).balance;
-        cEther.repayBorrow{value: repayAmount};
-        uint256 balanceAfterRepay = address(this).balance;
-        uint256 returnAmount = balanceBeforeRepay.sub(balanceAfterRepay);
-        if (returnAmount > 0) {
-            wETH.deposit{value: returnAmount}();
-            wETH.transfer(iBank, returnAmount);
-        }
+        cEther.repayBorrow{value: repayAmount}();    
         return 0;
     }
 

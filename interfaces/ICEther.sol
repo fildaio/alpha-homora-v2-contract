@@ -11,5 +11,5 @@ interface ICEther {
 
     function borrow(uint borrowAmount) external returns (uint);
 
-    function repayBorrow() external payable returns (uint);
+    function repayBorrow() external payable;
 }
