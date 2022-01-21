@@ -235,7 +235,9 @@ contract HomoraBank is Governable, ERC1155NaiveReceiver, IBank {
     if (debt > totalDebt) {
       uint fee = debt.sub(totalDebt).mul(feeBps).div(10000);
       bank.totalDebt = debt;
-      bank.reserve = bank.reserve.add(doBorrow(token, fee));
+      if (fee > 0) {
+        bank.reserve = bank.reserve.add(doBorrow(token, fee));
+      }
     } else if (totalDebt != debt) {
       // We should never reach here because CREAMv2 does not support *repayBorrowBehalf*
       // functionality. We set bank.totalDebt = debt nonetheless to ensure consistency. But do
