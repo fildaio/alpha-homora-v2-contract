@@ -5,12 +5,14 @@ pragma solidity 0.6.12;
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
+import '@openzeppelin/contracts/proxy/Initializable.sol';
+
 import '../interfaces/ICErc20.sol';
 import '../interfaces/ICEther.sol';
 import '../interfaces/IWETH.sol';
 
 
-contract CErc20Adaptor is ICErc20 {
+contract CErc20Adaptor is ICErc20, Initializable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -23,7 +25,7 @@ contract CErc20Adaptor is ICErc20 {
         _;
     }
     
-    constructor(address _cEther, address _wETH, address _iBank) public {
+    function initialize(address _cEther, address _wETH, address _iBank) external initializer {
         cEther = ICEther(_cEther);
         wETH = IWETH(_wETH);
         iBank = _iBank;
