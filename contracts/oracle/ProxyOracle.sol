@@ -3,7 +3,7 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import 'OpenZeppelin/openzeppelin-contracts@3.4.0/contracts/math/SafeMath.sol';
+import '@openzeppelin/contracts/math/SafeMath.sol';
 
 import '../Governable.sol';
 import '../../interfaces/IOracle.sol';
@@ -54,6 +54,26 @@ contract ProxyOracle is IOracle, Governable {
       require(_tokenFactors[idx].liqIncentive <= 20000, 'incentive must be at most 200%');
       tokenFactors[tokens[idx]] = _tokenFactors[idx];
       emit SetTokenFactor(tokens[idx], _tokenFactors[idx]);
+    }
+  }
+
+   function setTokenFactors(address[] memory tokens, uint16[] memory borrowFactors, uint16[] memory collateralFactors, uint16[] memory liqIncentives)
+    external
+    onlyGov
+  {
+    require(tokens.length == borrowFactors.length && tokens.length == collateralFactors.length && tokens.length == liqIncentives.length, 'inconsistent length');
+    for (uint idx = 0; idx < tokens.length; idx++) {
+      require(borrowFactors[idx] >= 10000, 'borrow factor must be at least 100%');
+      require(
+        collateralFactors[idx] <= 10000,
+        'collateral factor must be at most 100%'
+      );
+      require(liqIncentives[idx] >= 10000, 'incentive must be at least 100%');
+      require(liqIncentives[idx] <= 20000, 'incentive must be at most 200%');
+      tokenFactors[tokens[idx]].borrowFactor = borrowFactors[idx];
+      tokenFactors[tokens[idx]].collateralFactor = collateralFactors[idx];
+      tokenFactors[tokens[idx]].liqIncentive = liqIncentives[idx];
+      emit SetTokenFactor(tokens[idx], tokenFactors[tokens[idx]]);
     }
   }
 

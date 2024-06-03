@@ -28,6 +28,9 @@ interface IBank {
     uint share,
     uint bounty
   );
+  /// the debt got from ctoken is less than totalDebt saved in bank
+  event DebtErr(uint debt, uint totalInBank);
+  event SetRewardToken(address token);
 
   /// @dev Return the current position while under execution.
   function POSITION_ID() external view returns (uint);

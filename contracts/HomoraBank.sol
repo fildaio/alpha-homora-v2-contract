@@ -2,11 +2,11 @@
 
 pragma solidity 0.6.12;
 
-import 'OpenZeppelin/openzeppelin-contracts@3.4.0/contracts/token/ERC20/IERC20.sol';
-import 'OpenZeppelin/openzeppelin-contracts@3.4.0/contracts/token/ERC20/SafeERC20.sol';
-import 'OpenZeppelin/openzeppelin-contracts@3.4.0/contracts/token/ERC1155/IERC1155.sol';
-import 'OpenZeppelin/openzeppelin-contracts@3.4.0/contracts/math/SafeMath.sol';
-import 'OpenZeppelin/openzeppelin-contracts@3.4.0/contracts/math/Math.sol';
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
+import '@openzeppelin/contracts/token/ERC1155/IERC1155.sol';
+import '@openzeppelin/contracts/math/SafeMath.sol';
+import '@openzeppelin/contracts/math/Math.sol';
 
 import './Governable.sol';
 import './utils/ERC1155NaiveReceiver.sol';
@@ -94,6 +94,8 @@ contract HomoraBank is Governable, ERC1155NaiveReceiver, IBank {
 
   uint public bankStatus; // Each bit stores certain bank status, e.g. borrow allowed, repay allowed
 
+  address public rewardToken; // ICErc20 pool reward token;
+
   /// @dev Ensure that the function is called from EOA when allowContractCalls is set to false and caller is not whitelisted
   modifier onlyEOAEx() {
     if (!allowContractCalls && !whitelistedUsers[msg.sender]) {
@@ -129,7 +131,7 @@ contract HomoraBank is Governable, ERC1155NaiveReceiver, IBank {
   /// @dev Initialize the bank smart contract, using msg.sender as the first governor.
   /// @param _oracle The oracle smart contract address.
   /// @param _feeBps The fee collected to Homora bank.
-  function initialize(IOracle _oracle, uint _feeBps) external initializer {
+  function initialize(IOracle _oracle, uint _feeBps, address _rewardToken) external initializer {
     __Governable__init();
     _GENERAL_LOCK = _NOT_ENTERED;
     _IN_EXEC_LOCK = _NOT_ENTERED;
@@ -141,6 +143,7 @@ contract HomoraBank is Governable, ERC1155NaiveReceiver, IBank {
     feeBps = _feeBps;
     nextPositionId = 1;
     bankStatus = 3; // allow both borrow and repay
+    rewardToken = _rewardToken;
     emit SetOracle(address(_oracle));
     emit SetFeeBps(_feeBps);
   }
@@ -232,13 +235,16 @@ contract HomoraBank is Governable, ERC1155NaiveReceiver, IBank {
     if (debt > totalDebt) {
       uint fee = debt.sub(totalDebt).mul(feeBps).div(10000);
       bank.totalDebt = debt;
-      bank.reserve = bank.reserve.add(doBorrow(token, fee));
+      if (fee > 0) {
+        bank.reserve = bank.reserve.add(doBorrow(token, fee));
+      }
     } else if (totalDebt != debt) {
       // We should never reach here because CREAMv2 does not support *repayBorrowBehalf*
       // functionality. We set bank.totalDebt = debt nonetheless to ensure consistency. But do
       // note that if *repayBorrowBehalf* exists, an attacker can maliciously deflate debt
       // share value and potentially make this contract stop working due to math overflow.
       bank.totalDebt = debt;
+      emit DebtErr(debt, totalDebt);
     }
   }
 
@@ -406,6 +412,7 @@ contract HomoraBank is Governable, ERC1155NaiveReceiver, IBank {
     Bank storage bank = banks[token];
     require(!cTokenInBank[cToken], 'cToken already exists');
     require(!bank.isListed, 'bank already exists');
+    require(token != rewardToken, 'bank token cannot be reward token');
     cTokenInBank[cToken] = true;
     bank.isListed = true;
     require(allBanks.length < 256, 'reach bank limit');
@@ -433,6 +440,15 @@ contract HomoraBank is Governable, ERC1155NaiveReceiver, IBank {
     emit SetFeeBps(_feeBps);
   }
 
+  /// @dev Set the reward token smart contract address.
+  /// @param _rewardToken The new reward token smart contract address.
+  function setRewardToken(address _rewardToken) external onlyGov {
+    require(address(_rewardToken) != address(0), 'cannot set zero address rewardToken');
+    require(!banks[_rewardToken].isListed, 'rewardToken cannot be existing bank token');
+    rewardToken = _rewardToken;
+    emit SetRewardToken(_rewardToken);
+  }
+
   /// @dev Withdraw the reserve portion of the bank.
   /// @param amount The amount of tokens to withdraw.
   function withdrawReserve(address token, uint amount) external onlyGov lock {
@@ -441,6 +457,15 @@ contract HomoraBank is Governable, ERC1155NaiveReceiver, IBank {
     bank.reserve = bank.reserve.sub(amount);
     IERC20(token).safeTransfer(msg.sender, amount);
     emit WithdrawReserve(msg.sender, token, amount);
+  }
+
+  /// @dev Withdraw the reward of the bank.
+  /// @param amount The amount of tokens to withdraw.
+  function withdrawReward(uint amount) external onlyGov lock {
+    uint balance = IERC20(rewardToken).balanceOf(address(this));
+    if (balance > 0) {
+      IERC20(rewardToken).safeTransfer(msg.sender, amount > balance ? balance : amount);
+    }
   }
 
   /// @dev Liquidate a position. Pay debt for its owner and take the collateral.

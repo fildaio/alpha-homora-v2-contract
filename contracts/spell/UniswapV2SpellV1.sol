@@ -3,8 +3,8 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import 'OpenZeppelin/openzeppelin-contracts@3.4.0/contracts/token/ERC20/IERC20.sol';
-import 'OpenZeppelin/openzeppelin-contracts@3.4.0/contracts/math/SafeMath.sol';
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import '@openzeppelin/contracts/math/SafeMath.sol';
 
 import './WhitelistSpell.sol';
 import '../utils/HomoraMath.sol';
@@ -153,6 +153,8 @@ contract UniswapV2SpellV1 is WhitelistSpell {
     uint balA = IERC20(tokenA).balanceOf(address(this));
     uint balB = IERC20(tokenB).balanceOf(address(this));
     if (balA > 0 || balB > 0) {
+      require(balA >= amt.amtAMin, "desired amount is less than amtAMin");
+      require(balB >= amt.amtBMin, "desired amount is less than amtBMin");
       router.addLiquidity(
         tokenA,
         tokenB,

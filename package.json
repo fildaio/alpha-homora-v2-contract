@@ -1,7 +1,7 @@
 {
   "name": "homora-v2",
   "version": "1.0.0",
-  "description": "",
+  "description": "TL;DR. Here's what V2 will support:",
   "main": "index.js",
   "directories": {
     "test": "tests"
@@ -11,7 +11,9 @@
     "prettier-plugin-solidity": "^1.0.0-alpha.59"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "genabi": "truffle compile --all && truffle-abi -d build/contracts/ -o abi",
+    "size": "truffle run contract-size"
   },
   "repository": {
     "type": "git",
@@ -24,6 +26,11 @@
   },
   "homepage": "https://github.com/AlphaFinanceLab/homora-v2#readme",
   "dependencies": {
-    "@uniswap/v2-core": "^1.0.1"
+    "@truffle/hdwallet-provider": "^1.5.0",
+    "@uniswap/v2-core": "^1.0.1",
+    "dotenv": "^10.0.0",
+    "@openzeppelin/contracts": "3.4.2",
+    "truffle-abi": "^1.0.3",
+    "truffle-contract-size": "^2.0.1"
   }
 }
